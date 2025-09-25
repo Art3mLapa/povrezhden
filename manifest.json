@@ -1,0 +1,40 @@
+{
+"update_url": "https://clients2.google.com/service/update2/crx",
+
+  "manifest_version": 3,
+  "name": "[ POVREZHDEN ]",
+  "description": "Art3mLapa's fork of [ CORRUPTED ] by NICNACS_W",
+  "version": "1.6.2",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "128": "icons/icon.png"
+  },
+  "action": {
+    "default_icon": {
+      "32": "icons/icon.png"
+    },
+    "default_popup": "corrupted.html",
+    "default_title": "Open Popup"
+  },
+  "permissions": [
+    "cookies",
+    "tabs",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://auth.roblox.com/*",
+    "https://thumbnails.roblox.com/*",
+    "https://apis.roblox.com/*",
+    "https://users.roblox.com/*",
+    "https://www.roblox.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [ "https://*.roblox.com/*" ],
+      "js": [ "content.js" ],
+      "run_at": "document_idle"
+    }
+  ]
+}

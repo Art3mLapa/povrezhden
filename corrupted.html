@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extension Popup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            width: 220px;
+            padding: 15px;
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        select, input, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        select {
+            background-color: #2a2a2a;
+            color: #f0f0f0;
+        }
+
+            select option {
+                background-color: #2a2a2a;
+                color: #f0f0f0;
+            }
+
+        input {
+            width: 91%;
+            background-color: #2a2a2a;
+            color: #f0f0f0;
+            padding: 10px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+
+        button {
+            background-color: #4B0082;
+            color: #ffffff;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+
+            button:hover {
+                background-color: #800080;
+            }
+
+        #idInput {
+            display: none;
+        }
+    </style>
+    <script src="popup.js" defer></script>
+</head>
+<body>
+    <select id="type">
+        <option value="user">User</option>
+        <option value="group">Group</option>
+    </select>
+
+    <input type="text" id="idInput" placeholder="Enter Group ID">
+
+    <button id="setId">Save</button>
+</body>
+</html>
