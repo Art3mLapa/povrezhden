@@ -486,3 +486,4 @@ document.body.appendChild(encodeInput);
 encodeInput.addEventListener('change', handleEncodeFileSelection);
 
 //* NICNACS_W
+
