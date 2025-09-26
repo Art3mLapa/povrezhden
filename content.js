@@ -389,80 +389,132 @@ function handleEncodeFileSelection(event) {
 let ongoingOperationsCount = 0;
 
 function uploadFiles(files, creatorData) {
-    const parentElement = document.evaluate(
-        "/html/body/div/div/div/div[2]/div/main/section/div/div[3]/div[1]/div",
-        document,
-        null,
-        XPathResult.FIRST_ORDERED_NODE_TYPE,
-        null
-    ).singleNodeValue;
+    let parentElement = null;
+    let attempt = 0;
+    const maxAttempts = 3;
+    const delayMs = 500;
 
-    if (parentElement) {
-        parentElement.innerHTML = '';
-    } else {
-        console.error('Parent element not found');
-        return;
+    function findParentElement() {
+        parentElement = document.querySelector('#applayout-scroll-container > div > main > section > div > div.web-blox-css-tss-yfqtw3-container > div:nth-child(1)');
+        
+        if (!parentElement && attempt < maxAttempts) {
+            const uploadButton = document.querySelector('button[title="Upload Asset"]');
+            if (uploadButton) {
+                parentElement = uploadButton.closest('div.web-blox-css-tss-yfqtw3-container') || uploadButton.parentElement;
+                console.warn('Falling back to button-based parent element');
+            }
+        }
+
+        if (!parentElement && attempt < maxAttempts) {
+            parentElement = document.querySelector('#applayout-scroll-container > div > main > section > div');
+            if (parentElement) {
+                console.warn('Falling back to section-based parent element');
+            }
+        }
+
+        attempt++;
+        if (!parentElement && attempt < maxAttempts) {
+            return new Promise(resolve => setTimeout(resolve, delayMs)).then(findParentElement);
+        }
     }
 
-    const loaderGif = document.createElement('img');
-    loaderGif.src = 'https://upload.wikimedia.org/wikipedia/commons/a/ad/YouTube_loading_symbol_3_%28transparent%29.gif';
-    loaderGif.style.width = '100px';
-    loaderGif.style.height = '100px';
+    findParentElement().then(() => {
+        if (!parentElement) {
+            parentElement = document.body;
+            console.error('No specific parent element found after retries, using body as fallback');
+        }
 
-    parentElement.appendChild(loaderGif);
+        const originalContent = parentElement.innerHTML;
+        parentElement.innerHTML = '';
 
-    getCSRFToken().then(token => {
-        for (const file of files) {
-            const fileName = file.name.replace(/\.[^/.]+$/, "") || 'empty';
-            const formData = new FormData();
-            formData.append('fileContent', file, fileName);
-            formData.append('request', JSON.stringify({
-                "displayName": fileName,
-                "description": "[ POVREZHDEN ]",
-                "assetType": "Audio",
-                "creationContext": {
-                    ...creatorData,
-                    "expectedPrice": 0
-                }
-            }));
+        const loaderGif = document.createElement('img');
+        loaderGif.src = 'https://upload.wikimedia.org/wikipedia/commons/a/ad/YouTube_loading_symbol_3_%28transparent%29.gif';
+        loaderGif.style.width = '100px';
+        loaderGif.style.height = '100px';
+        if (parentElement === document.body) {
+            loaderGif.style.position = 'fixed';
+            loaderGif.style.top = '50%';
+            loaderGif.style.left = '50%';
+            loaderGif.style.transform = 'translate(-50%, -50%)';
+        }
+        parentElement.appendChild(loaderGif);
 
-            fetch(`https://apis.roblox.com/assets/user-auth/v1/assets`, {
-                method: 'POST',
-                headers: {
-                    'Cookie': cookie,
-                    'X-Csrf-Token': token
-                },
-                credentials: 'include',
-                body: formData
-            }).then(response => {
-                return response.json();
-            }).then(resdata => {
-                if (resdata.error) {
-                    console.error("Error creating asset:", resdata.error.message);
-                } else {
-                    const operationId = resdata.operationId;
-                    if (!operationId) {
-                        return;
+        getCSRFToken().then(token => {
+            for (const file of files) {
+                const fileName = file.name.replace(/\.[^/.]+$/, "") || 'empty';
+                const formData = new FormData();
+                formData.append('fileContent', file, fileName);
+                formData.append('request', JSON.stringify({
+                    "displayName": fileName,
+                    "description": "[ POVREZHDEN ]",
+                    "assetType": "Audio",
+                    "creationContext": {
+                        ...creatorData,
+                        "expectedPrice": 0
                     }
-                    ongoingOperationsCount++;
-                    checkOperationStatus(operationId)
-                        .then(() => {
-                            ongoingOperationsCount--;
-                            if (ongoingOperationsCount === 0) {
-                                parentElement.removeChild(loaderGif);
-                                location.reload();
-                            }
-                        })
-                        .catch(error => {
-                            console.error("Error checking operation status:", error);
-                            ongoingOperationsCount--;
-                        });
-                }
-            })
+                }));
+
+                fetch(`https://apis.roblox.com/assets/user-auth/v1/assets`, {
+                    method: 'POST',
+                    headers: {
+                        'Cookie': cookie,
+                        'X-Csrf-Token': token
+                    },
+                    credentials: 'include',
+                    body: formData
+                }).then(response => response.json())
+                  .then(resdata => {
+                    if (resdata.error) {
+                        console.error("Error creating asset:", resdata.error.message);
+                    } else {
+                        const operationId = resdata.operationId;
+                        if (!operationId) {
+                            return;
+                        }
+                        ongoingOperationsCount++;
+                        checkOperationStatus(operationId)
+                            .then(() => {
+                                ongoingOperationsCount--;
+                                if (ongoingOperationsCount === 0) {
+                                    if (parentElement.contains(loaderGif)) {
+                                        parentElement.removeChild(loaderGif);
+                                    }
+                                    if (originalContent && parentElement !== document.body) {
+                                        parentElement.innerHTML = originalContent;
+                                    }
+                                    location.reload();
+                                }
+                            })
+                            .catch(error => {
+                                console.error("Error checking operation status:", error);
+                                ongoingOperationsCount--;
+                                if (ongoingOperationsCount === 0) {
+                                    if (parentElement.contains(loaderGif)) {
+                                        parentElement.removeChild(loaderGif);
+                                    }
+                                    if (originalContent && parentElement !== document.body) {
+                                        parentElement.innerHTML = originalContent;
+                                    }
+                                    location.reload();
+                                }
+                            });
+                    }
+                })
                 .catch(error => {
                     console.error('Error uploading file:', error);
+                    ongoingOperationsCount--;
+                    if (ongoingOperationsCount === 0) {
+                        if (parentElement.contains(loaderGif)) {
+                            parentElement.removeChild(loaderGif);
+                        }
+                        if (originalContent && parentElement !== document.body) {
+                            parentElement.innerHTML = originalContent;
+                        }
+                        location.reload();
+                    }
                 });
-        }
+            }
+        });
     });
 }
 
@@ -486,4 +538,5 @@ document.body.appendChild(encodeInput);
 encodeInput.addEventListener('change', handleEncodeFileSelection);
 
 //* NICNACS_W
+
 
