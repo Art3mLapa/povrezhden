@@ -5,7 +5,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     cookie = message.cookie;
     sendResponse({ received: true });
 });
-
 function getCSRFToken() {
     return fetch('https://auth.roblox.com/v2/logout', {
         method: 'POST',
@@ -19,7 +18,6 @@ function getCSRFToken() {
             return csrfToken;
         });
 }
-
 function getUserId() {
     return fetch('https://users.roblox.com/v1/users/authenticated', {
         method: 'GET',
@@ -31,20 +29,17 @@ function getUserId() {
         .then(user_response => user_response.json())
         .then(data => data.id)
 }
-
 function observeMutations() {
     const observer = new MutationObserver((mutationsList) => {
         mutationsList.forEach((mutation) => {
             updatepage();
         });
     });
-
     const targetNode = document.querySelector("#applayout-scroll-container");
     if (targetNode) {
         observer.observe(targetNode, { childList: true, subtree: true, attributes: true });
     }
 }
-
 let lastUrl = location.href;
 function monitorUrlChanges() {
     const currentUrl = location.href;
@@ -54,18 +49,13 @@ function monitorUrlChanges() {
         updatepage();
     }
 }
-
 setInterval(() => {
     updatepage();
 }, 1000);
-
 setInterval(monitorUrlChanges, 100);
-
 window.addEventListener("load", updatepage);
-
 observeMutations();
 updatepage();
-
 function downloadid(assetId) {
     getCSRFToken().then(token => {
         fetch('https://assetdelivery.roblox.com/v1/assets/batch', {
@@ -76,8 +66,8 @@ function downloadid(assetId) {
                 'X-Csrf-Token': token,
                 'Roblox-Browser-Asset-Request': true
             },
-            credentials: 'include',
-            body: JSON.stringify([{ "requestId": assetId, "assetId": assetId }])
+            credentials: 'include'
+            ,body: JSON.stringify([{ "requestId": assetId, "assetId": assetId }])
         })
             .then(response => {
                 if (response.ok) {
@@ -89,11 +79,9 @@ function downloadid(assetId) {
             .then(data => {
                 const fileUrl = data[0].location;
                 const filename = `${assetId}.ogg`;
-
                 let a = document.createElement('a');
                 a.href = fileUrl;
                 a.download = filename;
-
                 if (window.Blob && window.URL && window.URL.createObjectURL) {
                     var xhr = new XMLHttpRequest();
                     xhr.open('GET', fileUrl, true);
@@ -113,18 +101,14 @@ function downloadid(assetId) {
             .catch(error => console.error('Error making POST request:', error));
     });
 }
-
 function updatepage() {
     if (window.location.href.includes("https://create.roblox.com/dashboard/creations") && window.location.href.includes("activeTab=Audio")) {
         const TableHead = document.querySelector("table > thead");
         const TableBody = document.querySelector("table > tbody");
-
         if (TableHead) {
             const parentRow = TableHead.querySelector("tr");
-
             if (parentRow && !parentRow.querySelector('[data-custom-header="icon"]')) {
                 const elementToClone = parentRow.querySelector("th");
-
                 if (elementToClone) {
                     const clonedElement = elementToClone.cloneNode(true);
                     const span = clonedElement.querySelector('span');
@@ -133,64 +117,51 @@ function updatepage() {
                         span.style.textAlign = "left";
                     }
                     clonedElement.setAttribute("data-custom-header", "icon");
-
                     clonedElement.style.width = "45px";
                     clonedElement.style.height = "45px";
-
                     parentRow.insertBefore(clonedElement, parentRow.firstChild);
                 }
             }
         }
-
         if (TableBody) {
             const rows = TableBody.querySelectorAll('tr');
             const assetIds = [];
-
             rows.forEach((row) => {
                 const linkElement = row.querySelector('a');
                 if (linkElement) {
                     const href = linkElement.getAttribute('href');
                     const idMatch = href.match(/\/store\/(\d+)\//);
                     const id = idMatch ? idMatch[1] : null;
-
                     if (id) {
                         if (!row.querySelector('[data-custom-icon="true"]')) {
                             assetIds.push(id);
                             const iconCell = document.createElement('td');
                             iconCell.setAttribute("data-custom-icon", "true");
-
                             const imageButton = document.createElement('button');
                             imageButton.style.padding = "0";
                             imageButton.style.border = "none";
                             imageButton.style.background = "none";
                             imageButton.style.cursor = "pointer";
-
                             const thumbnailImage = document.createElement('img');
                             thumbnailImage.src = "https://i.ibb.co/vbczQCZ/250925-16h53m23s-screenshot.png";
                             thumbnailImage.alt = "Placeholder Thumbnail";
                             thumbnailImage.style.width = "45px";
                             thumbnailImage.style.height = "45px";
                             thumbnailImage.style.display = "block";
-
                             imageButton.title = "Download Audio"
-
                             imageButton.appendChild(thumbnailImage);
-
                             imageButton.addEventListener('click', () => {
                                 downloadid(id)
                             });
-
                             iconCell.style.textAlign = "center";
                             iconCell.style.verticalAlign = "middle";
                             iconCell.style.borderBottom = "1px solid rgba(255, 255, 255, 0.12)";
-
                             iconCell.appendChild(imageButton);
                             row.insertBefore(iconCell, row.firstChild);
                         }
                     }
                 }
             });
-
             if (assetIds.length > 0) {
                 const apiUrl = `https://thumbnails.roblox.com/v1/assets?assetIds=${assetIds.join(',')}&returnPolicy=AutoGenerated&size=512x512&format=png`;
                 fetch(apiUrl, {
@@ -209,7 +180,6 @@ function updatepage() {
                                 const href = linkElement ? linkElement.getAttribute('href') : null;
                                 return href && href.includes(`${item.targetId}`);
                             });
-
                             if (matchingRow) {
                                 const existingIcon = matchingRow.querySelector('[data-custom-icon="true"] img');
                                 if (existingIcon) {
@@ -221,11 +191,9 @@ function updatepage() {
                     })
             }
         }
-
         const uploadAssetButton = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === 'Upload Asset');
         if (uploadAssetButton) {
             const buttonContainer = uploadAssetButton.parentNode;
-
             if (buttonContainer && !buttonContainer.querySelector('[data-custom-button="mass-upload"]') &&
                 !buttonContainer.querySelector('[data-custom-button="upload-multiple"]')) {
                 const massUploadButton = uploadAssetButton.cloneNode(true);
@@ -238,7 +206,6 @@ function updatepage() {
                 massUploadButton.addEventListener('click', function () {
                     encodeInput.click();
                 });
-
                 const uploadMultipleButton = uploadAssetButton.cloneNode(true);
                 uploadMultipleButton.setAttribute("data-custom-button", "upload-multiple");
                 uploadMultipleButton.style.marginRight = "8px";
@@ -246,18 +213,14 @@ function updatepage() {
                 if (uploadMultipleText) {
                     uploadMultipleText.textContent = "Upload Multiple";
                 }
-
                 uploadMultipleButton.classList.add('MuiButton-containedSecondary', 'MuiButton-colorSecondary');
                 uploadMultipleButton.addEventListener('click', function () {
                     fileInput.click();
                 });
-
-
                 buttonContainer.insertBefore(uploadMultipleButton, buttonContainer.firstChild);
                 buttonContainer.insertBefore(massUploadButton, buttonContainer.firstChild);
             }
         }
-
         const formatElements = document.querySelectorAll('div');
         const formatElement = Array.from(formatElements).find(el => el.textContent.startsWith('Format:'));
         if (formatElement) {
@@ -265,24 +228,20 @@ function updatepage() {
         }
     }
 }
-
 function gen(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = function (event) {
             const data = new Uint8Array(event.target.result);
             const bytesToDuplicate = 2666;
-
             const segment = data.slice(0, bytesToDuplicate);
             const generatedFiles = [];
-
             for (let i = 1; i <= 10; i++) {
                 const repeatedSegments = new Uint8Array(segment.length * i + data.length);
                 for (let j = 0; j < i; j++) {
                     repeatedSegments.set(segment, j * segment.length);
                 }
                 repeatedSegments.set(data, segment.length * i);
-
                 const fileExt = file.name.split('.').pop().toLowerCase();
                 const mimeType = fileExt === 'ogg' ? 'audio/ogg' : 'audio/mp3';
                 const blob = new Blob([repeatedSegments], { type: mimeType });
@@ -290,7 +249,6 @@ function gen(file) {
                 blob.name = `${fileName}_${i}.${fileExt}`;
                 generatedFiles.push(blob);
             }
-
             resolve(generatedFiles);
         };
         reader.onerror = function (event) {
@@ -299,7 +257,6 @@ function gen(file) {
         reader.readAsArrayBuffer(file);
     });
 }
-
 function checkOperationStatus(operationId) {
     return new Promise((resolve, reject) => {
         const checkStatus = () => {
@@ -322,11 +279,9 @@ function checkOperationStatus(operationId) {
                     reject(error);
                 });
         };
-
         checkStatus();
     });
 }
-
 function handleFileSelection(event) {
     const files = event.target.files;
     let creatorData = {};
@@ -354,11 +309,9 @@ function handleFileSelection(event) {
         }
     });
 }
-
 function handleEncodeFileSelection(event) {
     const file = event.target.files[0];
     let creatorData = {};
-
     gen(file)
         .then(files => {
             chrome.storage.sync.get(["selectedType"], function (data) {
@@ -385,18 +338,15 @@ function handleEncodeFileSelection(event) {
             });
         })
 }
-
 let ongoingOperationsCount = 0;
-
 function uploadFiles(files, creatorData) {
     let parentElement = null;
     let attempt = 0;
     const maxAttempts = 3;
     const delayMs = 500;
-
     function findParentElement() {
         parentElement = document.querySelector('#applayout-scroll-container > div > main > section > div > div.web-blox-css-tss-yfqtw3-container > div:nth-child(1)');
-        
+       
         if (!parentElement && attempt < maxAttempts) {
             const uploadButton = document.querySelector('button[title="Upload Asset"]');
             if (uploadButton) {
@@ -404,29 +354,26 @@ function uploadFiles(files, creatorData) {
                 console.warn('Falling back to button-based parent element');
             }
         }
-
         if (!parentElement && attempt < maxAttempts) {
             parentElement = document.querySelector('#applayout-scroll-container > div > main > section > div');
             if (parentElement) {
                 console.warn('Falling back to section-based parent element');
             }
         }
-
         attempt++;
         if (!parentElement && attempt < maxAttempts) {
             return new Promise(resolve => setTimeout(resolve, delayMs)).then(findParentElement);
+        } else {
+            return Promise.resolve();
         }
     }
-
     findParentElement().then(() => {
         if (!parentElement) {
             parentElement = document.body;
             console.error('No specific parent element found after retries, using body as fallback');
         }
-
         const originalContent = parentElement.innerHTML;
         parentElement.innerHTML = '';
-
         const loaderGif = document.createElement('img');
         loaderGif.src = 'https://upload.wikimedia.org/wikipedia/commons/a/ad/YouTube_loading_symbol_3_%28transparent%29.gif';
         loaderGif.style.width = '100px';
@@ -438,7 +385,6 @@ function uploadFiles(files, creatorData) {
             loaderGif.style.transform = 'translate(-50%, -50%)';
         }
         parentElement.appendChild(loaderGif);
-
         getCSRFToken().then(token => {
             for (const file of files) {
                 const fileName = file.name.replace(/\.[^/.]+$/, "") || 'empty';
@@ -453,7 +399,6 @@ function uploadFiles(files, creatorData) {
                         "expectedPrice": 0
                     }
                 }));
-
                 fetch(`https://apis.roblox.com/assets/user-auth/v1/assets`, {
                     method: 'POST',
                     headers: {
@@ -517,26 +462,17 @@ function uploadFiles(files, creatorData) {
         });
     });
 }
-
 const fileInput = document.createElement('input');
 fileInput.type = 'file';
 fileInput.multiple = true;
 fileInput.accept = '.mp3,.ogg';
 fileInput.style.display = 'none';
-
 document.body.appendChild(fileInput);
-
 fileInput.addEventListener('change', handleFileSelection);
-
 const encodeInput = document.createElement('input');
 encodeInput.type = 'file';
 encodeInput.accept = '.mp3,.ogg';
 encodeInput.style.display = 'none';
-
 document.body.appendChild(encodeInput);
-
 encodeInput.addEventListener('change', handleEncodeFileSelection);
-
 //* NICNACS_W
-
-
